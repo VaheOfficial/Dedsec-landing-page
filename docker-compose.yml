@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  dedsec-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: dedsec-ai-neural-core
+    restart: always
+    ports:
+      - "7443:7443"
+    environment:
+      - NODE_ENV=production
+      - PORT=7443
+      - HOSTNAME=0.0.0.0
+    networks:
+      - dedsec-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7443"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.dedsec.ai.description=Neural Network Infiltration System"
+      - "com.dedsec.ai.operator=RedactMe"
+      - "com.dedsec.ai.version=2.1.0"
+      - "com.dedsec.ai.port=7443"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Development service (uncomment for development)
+  # dedsec-ai-dev:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     target: dev
+  #   container_name: dedsec-ai-dev
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #     - PORT=3000
+  #   networks:
+  #     - dedsec-network
+
+networks:
+  dedsec-network:
+    driver: bridge
+    name: dedsec-neural-network
+    labels:
+      - "com.dedsec.ai.network=neural-infiltration" 
