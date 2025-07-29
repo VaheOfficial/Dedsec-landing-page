@@ -1,0 +1,58 @@
+[Unit]
+Description=Dedsec AI - Neural Network Infiltration System
+Documentation=https://github.com/VaheOfficial/Dedsec-landing-page
+After=network.target
+Wants=network.target
+
+[Service]
+# Service Configuration
+Type=exec
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=10
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+# Security Settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHostname=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+PrivateMounts=true
+
+# Working Directory and Execution
+WorkingDirectory=/opt/dedsec-ai
+ExecStart=/opt/dedsec-ai/start-dedsec.sh
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Environment Variables
+Environment=NODE_ENV=production
+Environment=PORT=7443
+Environment=HOSTNAME=0.0.0.0
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dedsec-ai
+
+# File Permissions
+ReadWritePaths=/opt/dedsec-ai
+ReadWritePaths=/opt/dedsec-ai/.next
+ReadWritePaths=/opt/dedsec-ai/node_modules
+
+[Install]
+WantedBy=multi-user.target 
