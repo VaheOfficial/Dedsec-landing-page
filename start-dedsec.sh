@@ -41,15 +41,85 @@ warning() {
     echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARNING: $1${NC}"
 }
 
-# Check if Node.js is installed
+# Function to setup Node.js environment
+setup_nodejs() {
+    # Try to find Node.js in common locations
+    NODE_PATHS=(
+        "/usr/bin/node"
+        "/usr/local/bin/node"
+        "$HOME/.nvm/versions/node/*/bin/node"
+        "/root/.nvm/versions/node/*/bin/node"
+    )
+    
+    NPM_PATHS=(
+        "/usr/bin/npm"
+        "/usr/local/bin/npm"
+        "$HOME/.nvm/versions/node/*/bin/npm"
+        "/root/.nvm/versions/node/*/bin/npm"
+    )
+    
+    # Check if nvm is available and source it
+    if [ -f "$HOME/.nvm/nvm.sh" ]; then
+        log "Loading nvm from user home..."
+        export NVM_DIR="$HOME/.nvm"
+        source "$NVM_DIR/nvm.sh"
+        nvm use node 2>/dev/null || nvm use default 2>/dev/null
+    elif [ -f "/root/.nvm/nvm.sh" ]; then
+        log "Loading nvm from root..."
+        export NVM_DIR="/root/.nvm"
+        source "$NVM_DIR/nvm.sh"
+        nvm use node 2>/dev/null || nvm use default 2>/dev/null
+    fi
+    
+    # Find Node.js executable
+    NODE_CMD=""
+    for path in "${NODE_PATHS[@]}"; do
+        if [ -x "$path" ] || ls $path 1> /dev/null 2>&1; then
+            NODE_CMD=$(ls $path 2>/dev/null | head -1)
+            if [ -x "$NODE_CMD" ]; then
+                break
+            fi
+        fi
+    done
+    
+    # Find npm executable
+    NPM_CMD=""
+    for path in "${NPM_PATHS[@]}"; do
+        if [ -x "$path" ] || ls $path 1> /dev/null 2>&1; then
+            NPM_CMD=$(ls $path 2>/dev/null | head -1)
+            if [ -x "$NPM_CMD" ]; then
+                break
+            fi
+        fi
+    done
+    
+    # Set up PATH to include Node.js
+    if [ ! -z "$NODE_CMD" ]; then
+        NODE_DIR=$(dirname "$NODE_CMD")
+        export PATH="$NODE_DIR:$PATH"
+        log "Found Node.js at: $NODE_CMD"
+    fi
+    
+    if [ ! -z "$NPM_CMD" ]; then
+        NPM_DIR=$(dirname "$NPM_CMD")
+        export PATH="$NPM_DIR:$PATH"
+        log "Found npm at: $NPM_CMD"
+    fi
+}
+
+# Setup Node.js environment
+setup_nodejs
+
+# Check if Node.js is now available
 if ! command -v node &> /dev/null; then
-    error "Node.js is not installed. Please install Node.js first."
+    error "Node.js is not found. Please install Node.js or nvm first."
+    error "For system-wide install: curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - && sudo apt-get install -y nodejs"
     exit 1
 fi
 
-# Check if npm is installed
+# Check if npm is available
 if ! command -v npm &> /dev/null; then
-    error "npm is not installed. Please install npm first."
+    error "npm is not found. Please install npm."
     exit 1
 fi
 

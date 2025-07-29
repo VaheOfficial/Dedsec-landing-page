@@ -33,7 +33,7 @@ PrivateMounts=true
 
 # Working Directory and Execution
 WorkingDirectory=/opt/dedsec-ai
-ExecStart=/opt/dedsec-ai/start-dedsec.sh
+ExecStart=/opt/dedsec-ai/dedsec-wrapper.sh
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=mixed
 KillSignal=SIGTERM
@@ -43,6 +43,8 @@ TimeoutStopSec=30
 Environment=NODE_ENV=production
 Environment=PORT=7443
 Environment=HOSTNAME=0.0.0.0
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+Environment=NVM_DIR=/root/.nvm
 
 # Logging
 StandardOutput=journal

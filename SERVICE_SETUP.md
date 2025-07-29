@@ -28,15 +28,20 @@ This guide will help you set up Dedsec AI as an automatic system service that:
 
 1. **Make scripts executable:**
    ```bash
-   chmod +x start-dedsec.sh install-service.sh
+   chmod +x *.sh
    ```
 
-2. **Run the automatic installer:**
+2. **If you have Node.js via nvm only, install system-wide:**
+   ```bash
+   sudo ./install-nodejs.sh
+   ```
+
+3. **Run the automatic installer:**
    ```bash
    sudo ./install-service.sh
    ```
 
-3. **Access your application:**
+4. **Access your application:**
    ```
    🌐 http://localhost:7443
    ```
@@ -58,8 +63,10 @@ This guide will help you set up Dedsec AI as an automatic system service that:
 | File | Purpose |
 |------|---------|
 | `start-dedsec.sh` | Main startup script with ASCII art and monitoring |
+| `dedsec-wrapper.sh` | Node.js environment wrapper for service compatibility |
 | `dedsec-ai.service` | Systemd service configuration |
 | `install-service.sh` | Automatic service installation script |
+| `install-nodejs.sh` | Standalone Node.js system installation script |
 
 ## 🛠️ Service Management
 
@@ -115,6 +122,32 @@ sudo systemctl disable dedsec-ai
 - ✅ No new privileges allowed
 
 ## 🐛 Troubleshooting
+
+### Node.js Issues (Most Common)
+
+If you get "npm not found" or "node not found" errors:
+
+1. **Install Node.js system-wide:**
+   ```bash
+   sudo ./install-nodejs.sh
+   ```
+
+2. **Or manually create symlinks if you have nvm:**
+   ```bash
+   # Find your Node.js installation
+   which node
+   which npm
+   
+   # Create system-wide symlinks (replace paths with your actual paths)
+   sudo ln -sf /path/to/your/node /usr/local/bin/node
+   sudo ln -sf /path/to/your/npm /usr/local/bin/npm
+   ```
+
+3. **Verify Node.js is available system-wide:**
+   ```bash
+   sudo -u www-data which node
+   sudo -u www-data which npm
+   ```
 
 ### Service Won't Start
 ```bash

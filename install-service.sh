@@ -39,6 +39,81 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+# Function to install Node.js system-wide
+install_nodejs() {
+    log "Checking Node.js installation..."
+    
+    # Check if Node.js is already installed system-wide
+    if command -v node &> /dev/null && command -v npm &> /dev/null; then
+        log "Node.js is already installed system-wide"
+        log "Node.js version: $(node --version)"
+        log "npm version: $(npm --version)"
+        return 0
+    fi
+    
+    # Check if user has nvm and Node.js
+    if [ -f "$HOME/.nvm/nvm.sh" ] || [ -f "/root/.nvm/nvm.sh" ]; then
+        log "Found nvm installation, checking for Node.js..."
+        
+        # Try to find Node.js from nvm
+        if [ -f "$HOME/.nvm/nvm.sh" ]; then
+            source "$HOME/.nvm/nvm.sh"
+            NODE_VERSION=$(nvm current 2>/dev/null)
+        elif [ -f "/root/.nvm/nvm.sh" ]; then
+            source "/root/.nvm/nvm.sh"
+            NODE_VERSION=$(nvm current 2>/dev/null)
+        fi
+        
+        if [ "$NODE_VERSION" != "system" ] && [ ! -z "$NODE_VERSION" ]; then
+            log "Found Node.js $NODE_VERSION via nvm"
+            
+            # Create symlinks for system-wide access
+            NODE_PATH=$(which node)
+            NPM_PATH=$(which npm)
+            
+            if [ ! -z "$NODE_PATH" ] && [ ! -z "$NPM_PATH" ]; then
+                log "Creating system-wide symlinks..."
+                ln -sf "$NODE_PATH" /usr/local/bin/node
+                ln -sf "$NPM_PATH" /usr/local/bin/npm
+                log "Node.js is now available system-wide"
+                return 0
+            fi
+        fi
+    fi
+    
+    # Install Node.js system-wide if not found
+    log "Installing Node.js system-wide..."
+    
+    # Detect package manager
+    if command -v apt-get &> /dev/null; then
+        log "Using apt-get to install Node.js..."
+        curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+        apt-get install -y nodejs
+    elif command -v yum &> /dev/null; then
+        log "Using yum to install Node.js..."
+        curl -fsSL https://rpm.nodesource.com/setup_lts.x | bash -
+        yum install -y nodejs npm
+    elif command -v dnf &> /dev/null; then
+        log "Using dnf to install Node.js..."
+        curl -fsSL https://rpm.nodesource.com/setup_lts.x | bash -
+        dnf install -y nodejs npm
+    else
+        error "Could not detect package manager. Please install Node.js manually."
+        error "Visit: https://nodejs.org/en/download/"
+        exit 1
+    fi
+    
+    # Verify installation
+    if command -v node &> /dev/null && command -v npm &> /dev/null; then
+        log "Node.js installed successfully!"
+        log "Node.js version: $(node --version)"
+        log "npm version: $(npm --version)"
+    else
+        error "Failed to install Node.js"
+        exit 1
+    fi
+}
+
 # ASCII Art Banner
 echo -e "${GREEN}"
 echo "██████╗ ███████╗██████╗ ███████╗███████╗ ██████╗    █████╗ ██╗"
@@ -53,9 +128,17 @@ echo ""
 
 log "Starting Dedsec AI service installation..."
 
+# Install or setup Node.js
+install_nodejs
+
 # Check if required files exist
 if [ ! -f "start-dedsec.sh" ]; then
     error "start-dedsec.sh not found in current directory"
+    exit 1
+fi
+
+if [ ! -f "dedsec-wrapper.sh" ]; then
+    error "dedsec-wrapper.sh not found in current directory"
     exit 1
 fi
 
@@ -84,9 +167,10 @@ log "Copying application files..."
 cp -r * $INSTALL_DIR/
 chown -R www-data:www-data $INSTALL_DIR
 
-# Make start script executable
-log "Making start script executable..."
+# Make scripts executable
+log "Making scripts executable..."
 chmod +x $INSTALL_DIR/start-dedsec.sh
+chmod +x $INSTALL_DIR/dedsec-wrapper.sh
 
 # Install systemd service
 log "Installing systemd service..."
@@ -111,6 +195,7 @@ log "Setting file permissions..."
 chown -R www-data:www-data $INSTALL_DIR
 chmod -R 755 $INSTALL_DIR
 chmod +x $INSTALL_DIR/start-dedsec.sh
+chmod +x $INSTALL_DIR/dedsec-wrapper.sh
 
 # Install Node.js dependencies
 log "Installing Node.js dependencies..."
