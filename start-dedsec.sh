@@ -147,24 +147,41 @@ trap cleanup SIGINT SIGTERM
 # Install dependencies if node_modules doesn't exist or package-lock.json is newer
 if [ ! -d "node_modules" ] || [ "package-lock.json" -nt "node_modules" ]; then
     log "Installing dependencies..."
-    npm install
-    if [ $? -ne 0 ]; then
-        error "Failed to install dependencies"
-        exit 1
+    
+    # Check if we can write to the directory
+    if [ ! -w "." ]; then
+        warning "No write permission in current directory, skipping npm install"
+        warning "Dependencies should be installed during service setup"
+    else
+        npm install
+        if [ $? -ne 0 ]; then
+            error "Failed to install dependencies"
+            exit 1
+        fi
     fi
 else
     log "Dependencies already installed"
 fi
 
-# Build the application
-log "Building Dedsec AI application..."
-npm run build
-if [ $? -ne 0 ]; then
-    error "Build failed"
-    exit 1
+# Build the application (only if .next doesn't exist or if we can write)
+if [ ! -d ".next" ]; then
+    log "Building Dedsec AI application..."
+    
+    # Check if we can write to the directory
+    if [ ! -w "." ]; then
+        warning "No write permission in current directory, skipping build"
+        warning "Application should be built during service setup"
+    else
+        npm run build
+        if [ $? -ne 0 ]; then
+            error "Build failed"
+            exit 1
+        fi
+        log "Build completed successfully"
+    fi
+else
+    log "Application already built (.next directory exists)"
 fi
-
-log "Build completed successfully"
 
 # Check if port 7443 is already in use
 if lsof -Pi :7443 -sTCP:LISTEN -t >/dev/null ; then

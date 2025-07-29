@@ -200,7 +200,9 @@ chmod +x $INSTALL_DIR/dedsec-wrapper.sh
 # Install Node.js dependencies
 log "Installing Node.js dependencies..."
 cd $INSTALL_DIR
-sudo -u www-data npm install --production
+
+# Run npm as root and then fix ownership
+npm install --production
 
 if [ $? -ne 0 ]; then
     error "Failed to install Node.js dependencies"
@@ -209,12 +211,16 @@ fi
 
 # Build the application
 log "Building the application..."
-sudo -u www-data npm run build
+npm run build
 
 if [ $? -ne 0 ]; then
     error "Failed to build the application"
     exit 1
 fi
+
+# Fix ownership after npm operations
+log "Setting correct ownership for npm-generated files..."
+chown -R www-data:www-data $INSTALL_DIR
 
 # Start the service
 log "Starting $SERVICE_NAME service..."

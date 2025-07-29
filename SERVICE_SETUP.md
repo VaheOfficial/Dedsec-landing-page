@@ -22,6 +22,21 @@ This guide will help you set up Dedsec AI as an automatic system service that:
 - ✅ Runs with proper security isolation
 - ✅ Provides comprehensive logging
 
+## ⚡ Quick Fix for Common Issues
+
+**Getting "user root is not allowed to execute npm as www-data" error?**
+```bash
+chmod +x *.sh
+sudo ./fix-permissions.sh
+sudo systemctl restart dedsec-ai
+```
+
+**Getting "npm not found" or "node not found" error?**
+```bash
+sudo ./install-nodejs.sh
+sudo ./install-service.sh
+```
+
 ## 🚀 Quick Setup
 
 ### Option 1: Automatic Service Installation (Recommended)
@@ -67,6 +82,7 @@ This guide will help you set up Dedsec AI as an automatic system service that:
 | `dedsec-ai.service` | Systemd service configuration |
 | `install-service.sh` | Automatic service installation script |
 | `install-nodejs.sh` | Standalone Node.js system installation script |
+| `fix-permissions.sh` | Permission fix script for sudo issues |
 
 ## 🛠️ Service Management
 
@@ -173,14 +189,34 @@ sudo -u www-data npm run build
 ```
 
 ### Permission Issues
-```bash
-# Fix ownership
-sudo chown -R www-data:www-data /opt/dedsec-ai
 
-# Fix permissions
-sudo chmod -R 755 /opt/dedsec-ai
-sudo chmod +x /opt/dedsec-ai/start-dedsec.sh
-```
+**If you get "user root is not allowed to execute npm as www-data" error:**
+
+1. **Use the automatic fix script:**
+   ```bash
+   chmod +x fix-permissions.sh
+   sudo ./fix-permissions.sh
+   ```
+
+2. **Or manually fix permissions:**
+   ```bash
+   # Fix ownership
+   sudo chown -R www-data:www-data /opt/dedsec-ai
+
+   # Fix permissions
+   sudo chmod -R 755 /opt/dedsec-ai
+   sudo chmod +x /opt/dedsec-ai/*.sh
+   
+   # Restart the service
+   sudo systemctl restart dedsec-ai
+   ```
+
+3. **For severe sudo restrictions, modify /etc/sudoers:**
+   ```bash
+   sudo visudo
+   # Add this line:
+   # root ALL=(www-data) NOPASSWD: /usr/bin/npm, /usr/local/bin/npm
+   ```
 
 ## 🔄 Updates
 
